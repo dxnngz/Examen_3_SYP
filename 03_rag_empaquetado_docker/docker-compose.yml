@@ -1,0 +1,23 @@
+services:
+  rag-dam2:
+    build: .
+    container_name: rag-dam2-packaged
+    ports:
+      - "8010:8000"
+    environment:
+      OLLAMA_HOST: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.1:8b
+      RAG_API_KEY: dam2-secret-2026
+    volumes:
+      - rag_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  rag_data:

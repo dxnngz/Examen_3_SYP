@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SysOps Stack Explorer 3D — Premium DAM2</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Cyberpunk interactive grids and lights -->
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="glow-orb orb-1" aria-hidden="true"></div>
+    <div class="glow-orb orb-2" aria-hidden="true"></div>
+
+    <header class="top-nav">
+      <div class="brand">
+        <div class="pulse-indicator">
+          <div class="pulse-dot"></div>
+          <div class="pulse-ring"></div>
+        </div>
+        <div>
+          <h1 class="nav-title">SysOps Stack Explorer <span class="badge">v2.0 PRO</span></h1>
+          <p class="nav-sub">Explorador de Arquitectura 3D — Módulo de Servicios y Procesos (DAM2)</p>
+        </div>
+      </div>
+      <div class="quick-stats" aria-hidden="true">
+        <div class="stat-item">
+          <span class="stat-label">PERSPECTIVA</span>
+          <span class="stat-value" id="val-perspective">800px</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">AUTO-ROTAR</span>
+          <span class="stat-value text-accent" id="val-auto">ON</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">ACTIVO</span>
+          <span class="stat-value text-cyan" id="val-active-node">Cubo 3D</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <!-- CONTROL SIDEBAR -->
+      <aside class="sidebar">
+        <!-- Scene Switcher Panel -->
+        <section class="panel">
+          <h2 class="panel-title"><span class="icon">🎬</span> Seleccionar Escena 3D</h2>
+          <div class="scene-tabs">
+            <button class="tab-btn active" data-scene="cube-scene">
+              <span class="btn-icon">📦</span> Cubo Stack
+            </button>
+            <button class="tab-btn" data-scene="carousel-scene">
+              <span class="btn-icon">🎡</span> Carrusel 3D
+            </button>
+            <button class="tab-btn" data-scene="layers-scene">
+              <span class="btn-icon">🥞</span> Pila de Capas
+            </button>
+          </div>
+        </section>
+
+        <!-- 3D Manipulation Controls -->
+        <section class="panel">
+          <h2 class="panel-title"><span class="icon">🎛️</span> Parámetros Espaciales</h2>
+          
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="rot-y">Rotación Y (Horizontal)</label>
+              <span class="slider-val" id="val-rot-y">32°</span>
+            </div>
+            <input type="range" id="rot-y" min="-180" max="180" value="32" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="rot-x">Rotación X (Vertical)</label>
+              <span class="slider-val" id="val-rot-x">-16°</span>
+            </div>
+            <input type="range" id="rot-x" min="-90" max="90" value="-16" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="perspective">Profundidad (Perspectiva)</label>
+              <span class="slider-val" id="val-persp">800px</span>
+            </div>
+            <input type="range" id="perspective" min="400" max="1500" value="800" step="50" />
+          </div>
+
+          <div class="slider-group" id="spin-speed-container">
+            <div class="slider-header">
+              <label for="spin-speed">Velocidad Auto-Giro</label>
+              <span class="slider-val" id="val-speed">15s</span>
+            </div>
+            <input type="range" id="spin-speed" min="5" max="40" value="15" />
+          </div>
+        </section>
+
+        <!-- Toggles and Accessibility -->
+        <section class="panel">
+          <h2 class="panel-title"><span class="icon">⚙️</span> Preferencias del Sistema</h2>
+          <div class="toggle-list">
+            <label class="toggle-control">
+              <input id="auto" type="checkbox" checked />
+              <span class="control-indicator"></span>
+              <span class="control-label">Auto-rotar escena</span>
+            </label>
+
+            <label class="toggle-control">
+              <input id="drag-rotation" type="checkbox" checked />
+              <span class="control-indicator"></span>
+              <span class="control-label">Rotar con mouse drag</span>
+            </label>
+
+            <label class="toggle-control">
+              <input id="reduce" type="checkbox" />
+              <span class="control-indicator"></span>
+              <span class="control-label">Reducir movimiento (Accesibilidad)</span>
+            </label>
+
+            <div class="theme-picker">
+              <span class="picker-label">Tema Lumínico:</span>
+              <div class="theme-buttons">
+                <button class="theme-btn active" data-theme="neon" title="Cyberpunk Neon"></button>
+                <button class="theme-btn" data-theme="emerald" title="Matrix Emerald"></button>
+                <button class="theme-btn" data-theme="amber" title="Vintage Amber"></button>
+                <button class="theme-btn" data-theme="ice" title="Glacial Ice"></button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- 3D VIEWPORT -->
+      <section class="viewport-container">
+        <!-- Interactive 3D Canvas / Stage -->
+        <div class="viewport" id="viewport">
+          <div class="instruction-bubble">
+            <span class="hand-icon">🖱️</span> Arrastra para explorar la escena 3D
+          </div>
+          
+          <!-- Wrapper that holds the active 3D container -->
+          <div class="scene-wrapper" id="scene-wrapper">
+            
+            <!-- 1. CUBE SCENE (Active by default) -->
+            <div class="scene-cube active" id="cube-scene">
+              <div class="cube" id="cube" aria-label="Cubo 3D interactivo con tecnologías SysOps">
+                <!-- Glowing core inside the cube -->
+                <div class="core-glowing" id="cube-core"></div>
+                <!-- 6 Faces -->
+                <div class="face f1" data-tech="rag" tabindex="0">
+                  <div class="face-glow"></div>
+                  <span class="ico">🔍</span>
+                  <span class="face-title">RAG</span>
+                  <span class="face-tag">Búsqueda Semántica</span>
+                </div>
+                <div class="face f2" data-tech="docker" tabindex="0">
+                  <div class="face-glow"></div>
+                  <span class="ico">🐳</span>
+                  <span class="face-title">Docker</span>
+                  <span class="face-tag">Contenedores</span>
+                </div>
+                <div class="face f3" data-tech="nginx" tabindex="0">
+                  <div class="face-glow"></div>
+                  <span class="ico">⚙️</span>
+                  <span class="face-title">nginx</span>
+                  <span class="face-tag">Proxy Inverso</span>
+                </div>
+                <div class="face f4" data-tech="ollama" tabindex="0">
+                  <div class="face-glow"></div>
+                  <span class="ico">🧠</span>
+                  <span class="face-title">Ollama</span>
+                  <span class="face-tag">LLMs Locales</span>
+                </div>
+                <div class="face f5" data-tech="deploy" tabindex="0">
+                  <div class="face-glow"></div>
+                  <span class="ico">📦</span>
+                  <span class="face-title">Deploy</span>
+                  <span class="face-tag">CI/CD Git</span>
+                </div>
+                <div class="face f6" data-tech="ufw" tabindex="0">
+                  <div class="face-glow"></div>
+                  <span class="ico">🛡️</span>
+                  <span class="face-title">UFW</span>
+                  <span class="face-tag">Firewall</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. CAROUSEL SCENE (Hidden by default) -->
+            <div class="scene-carousel" id="carousel-scene">
+              <div class="carousel-ring" id="carousel-ring">
+                <!-- 5 Floating 3D Cards -->
+                <div class="carousel-item card" data-index="0" data-tech="rag" tabindex="0">
+                  <div class="card-header">
+                    <span class="card-ico">🔍</span>
+                    <span class="card-badge">Fase 1</span>
+                  </div>
+                  <h3>RAG</h3>
+                  <p>Inyección de base de conocimiento local para LLMs en tiempo real.</p>
+                </div>
+                <div class="carousel-item card" data-index="1" data-tech="docker" tabindex="0">
+                  <div class="card-header">
+                    <span class="card-ico">🐳</span>
+                    <span class="card-badge">Fase 2</span>
+                  </div>
+                  <h3>Docker</h3>
+                  <p>Virtualización a nivel de SO para servicios autocontenidos y seguros.</p>
+                </div>
+                <div class="carousel-item card" data-index="2" data-tech="nginx" tabindex="0">
+                  <div class="card-header">
+                    <span class="card-ico">⚙️</span>
+                    <span class="card-badge">Fase 3</span>
+                  </div>
+                  <h3>nginx</h3>
+                  <p>Enrutamiento y cifrado SSL seguro de peticiones externas.</p>
+                </div>
+                <div class="carousel-item card" data-index="3" data-tech="ollama" tabindex="0">
+                  <div class="card-header">
+                    <span class="card-ico">🧠</span>
+                    <span class="card-badge">Fase 4</span>
+                  </div>
+                  <h3>Ollama</h3>
+                  <p>Inferencia eficiente de modelos de lenguaje en local sin dependencias cloud.</p>
+                </div>
+                <div class="carousel-item card" data-index="4" data-tech="ufw" tabindex="0">
+                  <div class="card-header">
+                    <span class="card-ico">🛡️</span>
+                    <span class="card-badge">Seguridad</span>
+                  </div>
+                  <h3>UFW</h3>
+                  <p>Cierre perimetral del servidor y apertura exclusiva de puertos SSL.</p>
+                </div>
+              </div>
+              <div class="carousel-nav" aria-label="Navegación carrusel">
+                <button class="nav-arrow" id="carousel-prev" aria-label="Anterior">&larr;</button>
+                <span class="carousel-indicator-text" id="carousel-indicator">Elemento 1 / 5</span>
+                <button class="nav-arrow" id="carousel-next" aria-label="Siguiente">&rarr;</button>
+              </div>
+            </div>
+
+            <!-- 3. LAYERS SCENE (Hidden by default) -->
+            <div class="scene-layers" id="layers-scene">
+              <div class="layers-stack" id="layers-stack">
+                <!-- Stack Level 4: Client Layer -->
+                <div class="layer-item" data-level="4" data-tech="deploy">
+                  <div class="layer-content">
+                    <div class="layer-header">
+                      <span class="layer-badge">CAPA CLIENTE / CDN</span>
+                      <h4>Frontend & CI/CD</h4>
+                    </div>
+                    <p>Despliegue estático, compresión en cliente y distribución segura de SPA.</p>
+                    <span class="layer-decor">Port 443 -> SSL</span>
+                  </div>
+                </div>
+                <!-- Stack Level 3: Reverse Proxy Layer -->
+                <div class="layer-item" data-level="3" data-tech="nginx">
+                  <div class="layer-content">
+                    <div class="layer-header">
+                      <span class="layer-badge">CAPA ENRUTAMIENTO</span>
+                      <h4>Nginx Proxy Inverso</h4>
+                    </div>
+                    <p>Balanceador de carga, redirección de subdominios y terminación TLS.</p>
+                    <span class="layer-decor">Nginx Dockerized</span>
+                  </div>
+                </div>
+                <!-- Stack Level 2: Application Layer -->
+                <div class="layer-item" data-level="2" data-tech="docker">
+                  <div class="layer-content">
+                    <div class="layer-header">
+                      <span class="layer-badge">CAPA APLICACIÓN</span>
+                      <h4>FastAPI / Python Service</h4>
+                    </div>
+                    <p>Servicios API REST, orquestación de agentes y validación de endpoints.</p>
+                    <span class="layer-decor">Docker Isolated</span>
+                  </div>
+                </div>
+                <!-- Stack Level 1: Core Intelligence Layer -->
+                <div class="layer-item" data-level="1" data-tech="ollama">
+                  <div class="layer-content">
+                    <div class="layer-header">
+                      <span class="layer-badge">CAPA INTELIGENCIA LOCAL</span>
+                      <h4>Ollama & Vector DB (RAG)</h4>
+                    </div>
+                    <p>Inferencia de LLMs locales de código abierto integrados con ChromaDB.</p>
+                    <span class="layer-decor">Model: Llama 3 / Chroma</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Ground dynamic reflection & shadow -->
+          <div class="ground-shadow" id="ground-shadow"></div>
+        </div>
+
+        <!-- TECH INSPECTOR (TERMINAL STYLE) -->
+        <article class="inspector">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="term-dot red"></span>
+              <span class="term-dot yellow"></span>
+              <span class="term-dot green"></span>
+            </div>
+            <div class="terminal-title">sysops-inspector@dam2:~</div>
+            <div class="terminal-actions">
+              <button class="terminal-btn-clear" id="clear-term" title="Limpiar Terminal">clear</button>
+            </div>
+          </div>
+          <div class="terminal-body" id="terminal-body">
+            <div class="terminal-line"><span class="term-prompt">sysops@dam2:~$</span> <span class="term-cmd">cat welcome_readme.txt</span></div>
+            <div class="terminal-output text-muted">
+              =========================================================
+              * BIENVENIDO AL EXPLORADOR DE PILA SYSOPS DAM2 v2.0 *
+              =========================================================
+              Haz clic en cualquier cara del cubo, tarjeta del carrusel,
+              o capa del stack para auditar su estado técnico, comandos
+              de control asociados y telemetría simulada.
+              
+              Puedes arrastrar la escena en cualquier dirección para
+              ajustar la rotación e interactuar con el entorno 3D.
+            </div>
+            <div class="terminal-line"><span class="term-prompt">sysops@dam2:~$</span> <span class="term-cmd" id="pending-prompt">systemctl status --sysops</span></div>
+            <div class="terminal-output" id="inspector-output">
+              <span class="text-success">● sysops-explorer.service - Servidor 3D Activo</span>
+              &nbsp;&nbsp;&nbsp;Loaded: loaded (/etc/systemd/system/sysops-explorer.service; enabled)
+              &nbsp;&nbsp;&nbsp;Active: <span class="text-success">active (running)</span> since Tue 2026-05-26 11:53:18 CEST
+              &nbsp;&nbsp;&nbsp;Main PID: 2026 (css3d-core)
+              &nbsp;&nbsp;&nbsp;Tasks: 3 (limit: 4915)
+              &nbsp;&nbsp;&nbsp;CGroup: /system.slice/sysops-explorer.service
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─2026 /usr/bin/css3d-renderer --stage=active
+            </div>
+            <div class="terminal-line"><span class="term-prompt">sysops@dam2:~$</span> <span class="cursor-blink">_</span></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="bottom-bar">
+      <div>
+        Estudiante: <span class="text-white">Examen Final SYP - DAM2</span>
+      </div>
+      <div class="footer-shortcuts">
+        <span><kbd>TAB</kbd> Navegar caras</span>
+        <span><kbd>Espacio</kbd> Activar giro</span>
+        <span><kbd>Esc</kbd> Limpiar terminal</span>
+      </div>
+      <div>
+        Tecnología: <span class="text-cyan">CSS 3D / Hardware Accelerated Rendering</span>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
